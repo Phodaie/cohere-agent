@@ -128,14 +128,18 @@ async def main():
     response = co.chat(
         message=message,
         tools=tools,
+        max_tokens=100000,
         tool_results=tool_results,
         preamble=preamble,
         model="command-r-plus",
         
     )
 
-    print("Final answer:")
+    
     print(response.text)
+    #write the respose to md file
+    with open("response.md", "w") as f:
+        f.write(response.text)
 
 if __name__ == "__main__":
     asyncio.run(main())
