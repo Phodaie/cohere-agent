@@ -4,7 +4,7 @@ from termcolor import colored
 import cohere
 
 
-API_KEY = os.environ.get("COHERE_API_KEY") # fill in your environment variable name here
+API_KEY = os.environ.get("COHERE_API_KEY") 
 co = cohere.Client(API_KEY)
 
 
@@ -32,7 +32,7 @@ async def llm_worker(task: str , ids = []) -> str:
     preable = "Only for the larger request, if possible breakdown the request into smaller sub-tasks and assign them to other LLMS. Assemlbe the results and provide the final output."
     
     print(colored(f"Task {ids}:","green") ,"\n", f"{task}")
-    if len(ids) < 2:
+    if len(ids) < 3:
     
         response = co.chat(
             preamble=preable,
@@ -113,7 +113,7 @@ async def main():
     """
 
 
-    message = "Create an introductory course on Python programming. Include the following topics: variables, data types, loops, and functions."
+    message = "Create ONLY the module on 'object-oriented support' of an introductory course on Python programmings."
 
     response = co.chat(
         message=message,
@@ -125,21 +125,37 @@ async def main():
     tool_results = await call_tools_parallel(response=response)
 
 
-    response = co.chat(
+    # response = co.chat(
+    #     message=message,
+    #     tools=tools,
+    #     max_tokens=4000,
+    #     tool_results=tool_results,
+    #     preamble=preamble,
+    #     model="command-r-plus",
+    # )
+    # print(response.text)
+
+    stream = co.chat_stream(
         message=message,
         tools=tools,
-        max_tokens=100000,
+        max_tokens=4000,
         tool_results=tool_results,
         preamble=preamble,
-        model="command-r-plus",
         
+        model="command-r-plus",
     )
 
+    final_text = ""
+    for event in stream:
+        if event.event_type == "text-generation":
+            print(event.text, end='')
+            final_text += event.text
+    print("\n")
     
-    print(response.text)
+    
     #write the respose to md file
     with open("response.md", "w") as f:
-        f.write(response.text)
+        f.write(final_text)
 
 if __name__ == "__main__":
     asyncio.run(main())
